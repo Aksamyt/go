@@ -554,6 +554,14 @@ func (p *noder) funcDecl(fun *syntax.FuncDecl) *Node {
 	}
 
 	p.funcBody(f, fun.Body)
+	for _, paramOut := range t.Rlist.Slice() {
+		if paramOut.Left.Ninit.Len() > 0 {
+			init := paramOut.Left.Ninit.First()
+			f.Nbody.Prepend(
+				p.nod(fun, OAS, paramOut.Right, init),
+			)
+		}
+	}
 
 	if fun.Body != nil {
 		if f.Func.Pragma&Noescape != 0 {
@@ -606,6 +614,10 @@ func (p *noder) param(param *syntax.Field, dddOk, final bool) *Node {
 
 	typ := p.typeExpr(param.Type)
 	n := p.nodSym(param, ODCLFIELD, typ, name)
+
+	if param.Init != nil {
+		n.Left.Ninit = asNodes([]*Node{p.expr(param.Init)})
+	}
 
 	// rewrite ...T parameter
 	if typ.Op == ODDD {

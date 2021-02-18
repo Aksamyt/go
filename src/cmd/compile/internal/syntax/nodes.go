@@ -267,6 +267,7 @@ type (
 	Field struct {
 		Name *Name // nil means anonymous field/parameter (structs/parameters), or embedded interface (interfaces)
 		Type Expr  // field names declared in a list share the same Type (identical pointers)
+		Init Expr
 		node
 	}
 

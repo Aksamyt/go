@@ -628,7 +628,7 @@ func (p *parser) funcDeclOrNil() *FuncDecl {
 	f.Pragma = p.takePragma()
 
 	if p.tok == _Lparen {
-		rcvr := p.paramList()
+		rcvr := p.paramList(false)
 		switch len(rcvr) {
 		case 0:
 			p.error("method has no receiver")
@@ -1240,7 +1240,7 @@ func (p *parser) funcType() *FuncType {
 
 	typ := new(FuncType)
 	typ.pos = p.pos()
-	typ.ParamList = p.paramList()
+	typ.ParamList = p.paramList(false)
 	typ.ResultList = p.funcResult()
 
 	return typ
@@ -1322,7 +1322,7 @@ func (p *parser) funcResult() []*Field {
 	}
 
 	if p.tok == _Lparen {
-		return p.paramList()
+		return p.paramList(true)
 	}
 
 	pos := p.pos()
@@ -1558,7 +1558,7 @@ func (p *parser) dotsType() *DotsType {
 
 // Parameters    = "(" [ ParameterList [ "," ] ] ")" .
 // ParameterList = ParameterDecl { "," ParameterDecl } .
-func (p *parser) paramList() (list []*Field) {
+func (p *parser) paramList(allowDefine bool) (list []*Field) {
 	if trace {
 		defer p.trace("paramList")()
 	}
@@ -1573,6 +1573,11 @@ func (p *parser) paramList() (list []*Field) {
 			}
 			if par.Name != nil && par.Type != nil {
 				named++
+			}
+			if p.tok == _Define {
+				p.next()
+				e := p.expr()
+				par.Init = e
 			}
 			list = append(list, par)
 		}
